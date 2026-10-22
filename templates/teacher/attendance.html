@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Mark Attendance{% endblock %}
+{% block content %}
+<h3 class="page-title mb-3">Mark / Edit Attendance</h3>
+<div class="card mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5"><label class="form-label small mb-1">Subject &amp; Class</label>
+      <select name="ts" class="form-select" required><option value="">-- select --</option>
+        {% for a in assignments %}<option value="{{ a.id }}" {{ 'selected' if ts_id == a.id }}>{{ a.subject_code }} - {{ a.subject_name }} | {{ a.class_label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label class="form-label small mb-1">Date</label><input type="date" name="date" value="{{ date }}" max="{{ max_date }}" class="form-control" required></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100"><i class="bi bi-search"></i> Load Students</button></div>
+  </form>
+  {% if not assignments %}<div class="text-muted mt-2">You have no subjects assigned yet.</div>{% endif %}
+</div></div>
+
+{% if assignment %}
+<div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <span>{{ assignment.subject_name }} &bull; {{ assignment.class_label }} &bull; {{ date }}</span>
+  <span><span class="badge bg-success">Present: <span id="cntPresent">0</span></span> <span class="badge bg-danger">Absent: <span id="cntAbsent">0</span></span></span></div>
+  {% if already %}<div class="alert alert-warning rounded-0 mb-0 py-2 small"><i class="bi bi-info-circle"></i> Attendance for this date is already recorded. Saving will <strong>update</strong> it (no duplicates are created).</div>{% endif %}
+  {% if students %}
+  <form method="post" action="{{ url_for('teacher.attendance') }}">
+    {{ csrf() }}<input type="hidden" name="ts" value="{{ ts_id }}"><input type="hidden" name="date" value="{{ date }}">
+    <div class="card-body border-bottom d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-success btn-sm" data-markall="Present"><i class="bi bi-check-all"></i> Mark All Present</button>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-markall="Absent"><i class="bi bi-x-lg"></i> Mark All Absent</button>
+    </div>
+    <div class="table-responsive"><table class="table table-hover att-table mb-0" id="attTable">
+      <thead><tr><th>Student ID</th><th>Student Name</th><th class="text-center">Present</th><th class="text-center">Absent</th></tr></thead>
+      <tbody>{% for s in students %}
+        <tr><td>{{ s.student_id }}</td><td>{{ s.name }}</td>
+          <td class="text-center"><input class="form-check-input" type="radio" name="status_{{ s.id }}" value="Present" {{ 'checked' if s.status != 'Absent' }}></td>
+          <td class="text-center"><input class="form-check-input" type="radio" name="status_{{ s.id }}" value="Absent" {{ 'checked' if s.status == 'Absent' }}></td></tr>
+      {% endfor %}</tbody></table></div>
+    <div class="card-body"><button class="btn btn-primary"><i class="bi bi-save"></i> Save Attendance</button></div>
+  </form>
+  {% else %}<div class="card-body text-muted">This class has no students.</div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

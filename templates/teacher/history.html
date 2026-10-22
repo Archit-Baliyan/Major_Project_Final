@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Attendance History{% endblock %}
+{% block content %}
+<h3 class="page-title mb-3">Attendance History</h3>
+<div class="card mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-4"><label class="form-label small mb-1">Subject &amp; Class</label><select name="ts" class="form-select form-select-sm"><option value="">All</option>
+      {% for a in assignments %}<option value="{{ a.id }}" {{ 'selected' if ts_id == a.id }}>{{ a.subject_code }} | {{ a.class_label }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">From</label><input type="date" name="from_date" value="{{ from_date }}" class="form-control form-control-sm"></div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">To</label><input type="date" name="to_date" value="{{ to_date }}" class="form-control form-control-sm"></div>
+    <div class="col-md-3 d-flex gap-1"><button class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Filter</button><a class="btn btn-outline-secondary btn-sm" href="{{ url_for('teacher.history') }}">Reset</a></div>
+  </form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Date</th><th>Subject</th><th>Class</th><th class="text-end">Students</th><th class="text-end">Present</th><th class="text-end">Absent</th><th class="text-end">Present %</th><th class="text-end">Action</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td>{{ r.attendance_date.strftime('%d %b %Y') }}</td><td>{{ r.subject_code }}</td><td>{{ r.class_label }}</td>
+      <td class="text-end">{{ r.total }}</td><td class="text-end text-success">{{ r.present }}</td><td class="text-end text-danger">{{ r.absent }}</td>
+      <td class="text-end">{{ (r.present * 100 / r.total)|round(1) }}%</td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('teacher.attendance', ts=r.ts_id, date=r.attendance_date.isoformat()) }}"><i class="bi bi-pencil"></i> View / Edit</a></td></tr>
+  {% else %}<tr><td colspan="8" class="text-center text-muted py-4">No attendance sessions found.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

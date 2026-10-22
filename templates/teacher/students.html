@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pct_bar %}
+{% block title %}My Students{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div><h3 class="page-title mb-0">My Students</h3><div class="text-muted small">Attendance is calculated only for the subjects you teach</div></div>
+  <form method="get"><select name="class_id" class="form-select form-select-sm" data-autosubmit><option value="">All my classes</option>
+    {% for id, label in classes.items() %}<option value="{{ id }}" {{ 'selected' if class_id == id }}>{{ label }}</option>{% endfor %}</select></form>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Student ID</th><th>Name</th><th>Class</th><th>Present / Total</th><th>Attendance</th><th>Avg. marks</th><th>Status</th></tr></thead>
+  <tbody>{% for s in rows %}
+    <tr><td>{{ s.student_id }}</td><td>{{ s.name }}</td><td>{{ s.class_label }}</td><td>{{ s.present }} / {{ s.total }}</td>
+      <td>{{ pct_bar(s.pct, min_att, s.total) }}</td>
+      <td>{% if s.marks_pct is not none %}{{ s.marks_pct }}%{% else %}<span class="text-muted">-</span>{% endif %}</td>
+      <td>{% if s.total and s.pct < min_att %}<span class="badge bg-danger">At risk</span>{% elif s.total %}<span class="badge bg-success">OK</span>{% else %}<span class="badge bg-secondary">No data</span>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">No students.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

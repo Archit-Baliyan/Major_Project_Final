@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, pct_bar %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="mb-3"><h3 class="page-title mb-0">Hello, {{ s.name }}</h3>
+  <div class="text-muted small">{{ s.student_id }} &bull; {{ s.class_label }} &bull; minimum required attendance: <strong>{{ '%g'|format(d.min_att) }}%</strong></div></div>
+
+{% if d.total and d.overall < d.min_att %}
+<div class="alert alert-danger d-flex gap-2 align-items-start"><i class="bi bi-exclamation-octagon-fill fs-4"></i>
+  <div><strong>Low attendance warning!</strong> Your overall attendance is {{ d.overall }}%, below the required {{ '%g'|format(d.min_att) }}%.
+  You need to attend more classes to avoid being detained.</div></div>
+{% endif %}
+{% if d.low_subjects %}
+<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill"></i> Subjects below the minimum:
+  {% for x in d.low_subjects %}<span class="badge bg-warning text-dark">{{ x.subject_code }} ({{ x.pct }}%)</span> {% endfor %}</div>
+{% endif %}
+{% if d.total and d.overall >= d.min_att and not d.low_subjects %}
+<div class="alert alert-success py-2"><i class="bi bi-check-circle-fill"></i> Great! Your attendance is above the required minimum in every subject.</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">{{ stat_card('Overall Attendance', d.overall ~ '%', 'graph-up-arrow', 'success' if d.overall >= d.min_att else 'danger') }}</div>
+  <div class="col-6 col-lg-3">{{ stat_card('Days Present', d.present, 'check-circle', 'success') }}</div>
+  <div class="col-6 col-lg-3">{{ stat_card('Days Absent', d.absent, 'x-circle', 'danger') }}</div>
+  <div class="col-6 col-lg-3">{{ stat_card('Average Marks', marks.overall ~ '%', 'trophy', 'primary') }}</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4 col-lg-3"><div class="card h-100"><div class="card-header">Overall</div><div class="card-body"><div class="chart-box"><canvas id="c_overall"></canvas></div></div></div></div>
+  <div class="col-md-8 col-lg-5"><div class="card h-100"><div class="card-header">Subject-wise Attendance</div><div class="card-body"><div class="chart-box"><canvas id="c_subject"></canvas></div></div></div></div>
+  <div class="col-md-6 col-lg-4"><div class="card h-100"><div class="card-header">Attendance Trend (monthly)</div><div class="card-body"><div class="chart-box"><canvas id="c_monthly"></canvas></div></div></div></div>
+</div>
+
+<div class="card"><div class="card-header d-flex justify-content-between"><span>Subject-wise Summary</span><a class="small" href="{{ url_for('student.attendance') }}">View full history &rarr;</a></div>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>Subject</th><th>Total Classes</th><th>Present</th><th>Absent</th><th>Attendance</th></tr></thead>
+    <tbody>{% for x in d.subjects %}
+      <tr><td>{{ x.subject_code }} <span class="text-muted small">{{ x.subject_name }}</span></td><td>{{ x.total }}</td><td>{{ x.present }}</td><td>{{ x.absent }}</td><td>{{ pct_bar(x.pct, d.min_att, x.total) }}</td></tr>
+    {% else %}<tr><td colspan="5" class="text-center text-muted py-4">No subjects assigned to your class yet.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+<script id="chart-data" type="application/json">{{ {'min': d.min_att, 'overall': d.overall, 'subjects': d.subjects, 'monthly': d.monthly}|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  const d = chartData();
+  doughnutOverall('c_overall', d.overall, d.min);
+  subjectBar('c_subject', d.subjects, d.min);
+  trendLine('c_monthly', d.monthly, d.min);
+</script>
+{% endblock %}

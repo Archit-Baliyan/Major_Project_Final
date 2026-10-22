@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Performance{% endblock %}
+{% block content %}
+<h3 class="page-title mb-3">My Performance</h3>
+<div class="row g-3 mb-3">
+  <div class="col-lg-5"><div class="card h-100"><div class="card-header">Subject-wise Average (%)</div><div class="card-body"><div class="chart-box"><canvas id="c_subj"></canvas></div></div></div></div>
+  <div class="col-lg-7"><div class="card h-100"><div class="card-header">All Assessments (%)</div><div class="card-body"><div class="chart-box"><canvas id="c_assess"></canvas></div></div></div></div>
+</div>
+<div class="card"><div class="card-header d-flex justify-content-between"><span>Marks Details</span><span class="text-muted small">Overall average: <strong>{{ marks.overall }}%</strong></span></div>
+  <div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Subject</th><th>Assessment</th><th>Type</th><th class="text-end">Marks Obtained</th><th class="text-end">Total Marks</th><th class="text-end">Percentage</th></tr></thead>
+    <tbody>{% for r in marks.rows %}
+      <tr><td>{{ r.subject_code }}</td><td>{{ r.assessment_name }}</td><td>{{ r.assessment_type }}</td>
+        <td class="text-end">{{ '%g'|format(r.marks_obtained) }}</td><td class="text-end">{{ '%g'|format(r.total_marks) }}</td>
+        <td class="text-end fw-semibold {{ 'text-danger' if r.pct < 40 else 'text-success' }}">{{ r.pct }}%</td></tr>
+    {% else %}<tr><td colspan="6" class="text-center text-muted py-4">No marks have been entered yet.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+<script id="chart-data" type="application/json">{{ {'subj': marks.subject_avg, 'rows': marks.rows|map(attribute='pct')|list, 'labels': marks.rows|map(attribute='assessment_name')|list, 'codes': marks.rows|map(attribute='subject_code')|list}|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  const d = chartData();
+  simpleBar('c_subj', d.subj.map(x => x.subject), d.subj.map(x => x.avg), 'Average %', COL.brand);
+  simpleBar('c_assess', d.labels.map((l, i) => d.codes[i] + ' - ' + l), d.rows, 'Percentage', COL.sky);
+</script>
+{% endblock %}

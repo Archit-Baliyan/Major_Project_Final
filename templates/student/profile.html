@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<h3 class="page-title mb-3">My Profile</h3>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Student Details</div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Name</span><strong>{{ s.name }}</strong></li>
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Student ID</span><strong>{{ s.student_id }}</strong></li>
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Email</span><strong>{{ s.email }}</strong></li>
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Username</span><strong>{{ s.username }}</strong></li>
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Class</span><strong>{{ s.class_label }}</strong></li>
+      <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Minimum attendance required</span><strong>{{ '%g'|format(min_att) }}%</strong></li>
+    </ul></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Change Password</div><div class="card-body">
+    <form method="post" class="needs-validation" novalidate>{{ csrf() }}
+      <div class="mb-3"><label class="form-label">Current password</label><input type="password" name="current" class="form-control" required></div>
+      <div class="mb-3"><label class="form-label">New password</label><input type="password" name="new" class="form-control" required minlength="6"></div>
+      <div class="mb-3"><label class="form-label">Confirm new password</label><input type="password" name="confirm" class="form-control" required minlength="6"></div>
+      <button class="btn btn-primary">Update Password</button></form></div></div></div>
+</div>
+{% endblock %}

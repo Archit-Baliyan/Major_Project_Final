@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, delete_btn %}
+{% block title %}Subjects{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><h3 class="page-title mb-0">Subjects &amp; Teacher Assignments</h3></div>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#formModal"
+          data-action="{{ url_for('admin.subject_add') }}" data-title="Add Subject"><i class="bi bi-plus-lg"></i> Add Subject</button>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Subjects</div>
+    <div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>Code</th><th>Subject name</th><th class="text-end">Actions</th></tr></thead>
+      <tbody>{% for s in rows %}
+        <tr><td><span class="badge bg-primary-subtle text-primary">{{ s.subject_code }}</span></td><td>{{ s.subject_name }}</td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#formModal" title="Edit"
+                    data-action="{{ url_for('admin.subject_edit', pk=s.id) }}" data-title="Edit Subject"
+                    data-values='{{ {"subject_code": s.subject_code, "subject_name": s.subject_name}|tojson }}'><i class="bi bi-pencil"></i></button>
+            {{ delete_btn(url_for('admin.subject_delete', pk=s.id), 'Delete ' ~ s.subject_name ~ '? ALL its attendance and marks will be deleted!') }}
+          </td></tr>
+      {% else %}<tr><td colspan="3" class="text-center text-muted py-4">No subjects yet.</td></tr>{% endfor %}</tbody>
+    </table></div></div></div>
+
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Assign Teacher to Subject &amp; Class</div>
+    <div class="card-body border-bottom">
+      <form method="post" action="{{ url_for('admin.subject_assign') }}" class="row g-2 needs-validation" novalidate>
+        {{ csrf() }}
+        <div class="col-md-4"><select name="teacher_id" class="form-select form-select-sm" required><option value="">Teacher</option>
+          {% for t in teachers %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><select name="subject_id" class="form-select form-select-sm" required><option value="">Subject</option>
+          {% for s in rows %}<option value="{{ s.id }}">{{ s.subject_code }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><select name="class_id" class="form-select form-select-sm" required><option value="">Class</option>
+          {% for c in classes %}<option value="{{ c.id }}">{{ c.label }}</option>{% endfor %}</select></div>
+        <div class="col-12"><button class="btn btn-success btn-sm"><i class="bi bi-link-45deg"></i> Assign</button>
+          <span class="text-muted small ms-2">Assigning again to the same subject + class replaces the teacher.</span></div>
+      </form></div>
+    <div class="table-responsive"><table class="table table-sm mb-0">
+      <thead><tr><th>Subject</th><th>Class</th><th>Teacher</th><th></th></tr></thead>
+      <tbody>{% for a in assignments %}
+        <tr><td>{{ a.subject_code }}</td><td>{{ a.class_label }}</td><td>{{ a.teacher_name }}</td>
+          <td class="text-end">{{ delete_btn(url_for('admin.assignment_delete', pk=a.id), 'Remove this assignment?') }}</td></tr>
+      {% else %}<tr><td colspan="4" class="text-center text-muted py-4">No assignments yet.</td></tr>{% endfor %}</tbody>
+    </table></div></div></div>
+</div>
+
+<div class="modal fade" id="formModal" tabindex="-1"><div class="modal-dialog"><form method="post" class="modal-content needs-validation" novalidate>
+  {{ csrf() }}
+  <div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body row g-3">
+    <div class="col-12"><label class="form-label">Subject code</label><input name="subject_code" class="form-control" required minlength="2" maxlength="20" pattern="[A-Za-z0-9_\-]+" placeholder="e.g. PYT101"></div>
+    <div class="col-12"><label class="form-label">Subject name</label><input name="subject_name" class="form-control" required minlength="2" maxlength="100"></div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+</form></div></div>
+{% endblock %}

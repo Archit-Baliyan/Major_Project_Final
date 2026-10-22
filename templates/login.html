@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | Smart Attendance</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="card auth-card shadow-lg"><div class="card-body p-4 p-md-5">
+    <div class="text-center mb-4">
+      <div class="display-5 text-primary"><i class="bi bi-calendar2-check-fill"></i></div>
+      <h4 class="fw-bold mb-0">Smart Attendance</h4>
+      <div class="text-muted small">Attendance &amp; Analytics System</div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="alert alert-{{ cat }} py-2">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('auth.login') }}" class="needs-validation" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="mb-3"><label class="form-label">Username</label>
+        <div class="input-group"><span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input name="username" class="form-control" required autofocus autocomplete="username"></div></div>
+      <div class="mb-4"><label class="form-label">Password</label>
+        <div class="input-group"><span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" name="password" class="form-control" required autocomplete="current-password"></div></div>
+      <button class="btn btn-primary w-100 py-2">Login</button>
+    </form>
+  </div></div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body></html>

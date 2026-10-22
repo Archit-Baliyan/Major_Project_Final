@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Attendance Reports{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div><h3 class="page-title mb-0">Attendance Reports</h3><div class="text-muted small">Filter, then export as CSV or PDF</div></div>
+  <div class="btn-group">
+    <a class="btn btn-success btn-sm {{ 'disabled' if not rows }}" href="{{ url_for(request.endpoint, export='csv', **active) }}"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+    <a class="btn btn-danger btn-sm {{ 'disabled' if not rows }}" href="{{ url_for(request.endpoint, export='pdf', **active) }}"><i class="bi bi-filetype-pdf"></i> Export PDF</a>
+  </div>
+</div>
+
+<div class="card mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">From date</label><input type="date" name="from_date" value="{{ f.from_date }}" class="form-control form-control-sm"></div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">To date</label><input type="date" name="to_date" value="{{ f.to_date }}" class="form-control form-control-sm"></div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">Class</label>
+      <select name="class_id" class="form-select form-select-sm"><option value="">All</option>
+        {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if f.class_id == c.id }}>{{ c.label }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">Subject</label>
+      <select name="subject_id" class="form-select form-select-sm"><option value="">All</option>
+        {% for s in subjects %}<option value="{{ s.id }}" {{ 'selected' if f.subject_id == s.id }}>{{ s.subject_code }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-2"><label class="form-label small mb-1">Student</label>
+      <select name="student_id" class="form-select form-select-sm"><option value="">All</option>
+        {% for s in students %}<option value="{{ s.id }}" {{ 'selected' if f.student_id == s.id }}>{{ s.name }} ({{ s.student_id }})</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-2 d-flex gap-1">
+      <button class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Apply</button>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ request.path }}">Reset</a></div>
+  </form>
+</div></div>
+
+<div class="card"><div class="card-header d-flex justify-content-between">
+  <span>Results</span><span class="text-muted small">{{ rows|length }} row(s) &bull; rows below {{ '%g'|format(min_att) }}% are highlighted</span></div>
+  <div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Student Name</th><th>Student ID</th><th>Subject</th><th>Class</th><th class="text-end">Total Classes</th><th class="text-end">Present</th><th class="text-end">Absent</th><th class="text-end">Attendance %</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{{ 'table-danger' if r.pct < min_att }}"><td>{{ r.name }}</td><td>{{ r.student_id }}</td><td>{{ r.subject_code }}</td><td>{{ r.class_label }}</td>
+        <td class="text-end">{{ r.total }}</td><td class="text-end">{{ r.present }}</td><td class="text-end">{{ r.absent }}</td><td class="text-end fw-semibold">{{ r.pct }}%</td></tr>
+    {% else %}<tr><td colspan="8" class="text-center text-muted py-4">No attendance records match these filters.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+{% endblock %}

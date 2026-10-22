@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, pct_bar %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div><h3 class="page-title mb-0">{{ 'Admin' if role == 'admin' else 'Teacher' }} Dashboard</h3>
+    <div class="text-muted small">{{ 'Overall' if role == 'admin' else 'Your classes' }} attendance analytics &bull; minimum required attendance: <strong>{{ '%g'|format(d.min_att) }}%</strong></div></div>
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for(role + '.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+</div>
+
+<div class="row g-3 mb-3">
+  {% for label, value, icon, color in d.cards %}
+  <div class="col-6 col-md-4 col-xl-2">{{ stat_card(label, value, icon, color) }}</div>
+  {% endfor %}
+</div>
+
+{% if assignments is defined %}
+<div class="card mb-3"><div class="card-header">My Subjects &amp; Classes</div>
+  <div class="card-body d-flex flex-wrap gap-2">
+    {% for a in assignments %}
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('teacher.attendance', ts=a.id) }}"><i class="bi bi-calendar-check"></i> {{ a.subject_code }} &middot; {{ a.class_label }}</a>
+    {% else %}<span class="text-muted">No subjects assigned yet. Ask the admin to assign you.</span>{% endfor %}
+  </div></div>
+{% endif %}
+
+{% if d.total == 0 %}
+  <div class="alert alert-info">No attendance has been recorded yet, so the charts are empty.</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Overall Attendance</div><div class="card-body"><div class="chart-box"><canvas id="c_overall"></canvas></div></div></div></div>
+  <div class="col-lg-8"><div class="card h-100"><div class="card-header">Subject-wise Attendance</div><div class="card-body"><div class="chart-box"><canvas id="c_subject"></canvas></div></div></div></div>
+  <div class="col-lg-5"><div class="card h-100"><div class="card-header">Monthly Attendance Trend</div><div class="card-body"><div class="chart-box"><canvas id="c_monthly"></canvas></div></div></div></div>
+  <div class="col-lg-3"><div class="card h-100"><div class="card-header">Present vs Absent</div><div class="card-body"><div class="chart-box"><canvas id="c_pva"></canvas></div></div></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Top 5 &amp; Lowest 5 Students</div><div class="card-body"><div class="chart-box"><canvas id="c_students"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card h-100"><div class="card-header text-danger"><i class="bi bi-exclamation-triangle"></i> Students at Risk (below {{ '%g'|format(d.min_att) }}%)</div>
+    <div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Present / Total</th><th>Attendance</th></tr></thead>
+      <tbody>{% for s in d.at_risk %}
+        <tr><td>{{ s.student_id }}</td><td>{{ s.name }}</td><td>{{ s.class_label }}</td><td>{{ s.present }} / {{ s.total }}</td><td>{{ pct_bar(s.pct, d.min_att) }}</td></tr>
+      {% else %}<tr><td colspan="5" class="text-center text-muted py-4">No students are below the minimum. 🎉</td></tr>{% endfor %}</tbody>
+    </table></div></div></div>
+  <div class="col-lg-5"><div class="card h-100"><div class="card-header">Attendance Summary by Subject</div>
+    <div class="table-responsive"><table class="table mb-0">
+      <thead><tr><th>Subject</th><th>Records</th><th>Attendance</th></tr></thead>
+      <tbody>{% for s in d.subjects %}
+        <tr><td>{{ s.subject_code }}<div class="small text-muted">{{ s.subject_name }}</div></td><td>{{ s.total }}</td><td>{{ pct_bar(s.pct, d.min_att) }}</td></tr>
+      {% else %}<tr><td colspan="3" class="text-center text-muted py-4">No data</td></tr>{% endfor %}</tbody>
+    </table></div></div></div>
+</div>
+
+<script id="chart-data" type="application/json">{{ {'min': d.min_att, 'avg': d.avg, 'present': d.present, 'absent': d.absent, 'subjects': d.subjects, 'monthly': d.monthly, 'top': d.top, 'low': d.low}|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  const d = chartData();
+  doughnutOverall('c_overall', d.avg, d.min);
+  subjectBar('c_subject', d.subjects, d.min);
+  trendLine('c_monthly', d.monthly, d.min);
+  presentAbsent('c_pva', d.present, d.absent);
+  topLow('c_students', d.top, d.low, d.min);
+</script>
+{% endblock %}

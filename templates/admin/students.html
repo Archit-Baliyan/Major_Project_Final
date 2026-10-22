@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, pct_bar, delete_btn %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div><h3 class="page-title mb-0">Students</h3><div class="text-muted small">{{ rows|length }} student(s)</div></div>
+  <div class="d-flex gap-2">
+    <form method="get"><select name="class_id" class="form-select form-select-sm" data-autosubmit>
+      <option value="">All classes</option>
+      {% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if class_id == c.id }}>{{ c.label }}</option>{% endfor %}</select></form>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#formModal"
+            data-action="{{ url_for('admin.student_add') }}" data-title="Add Student"><i class="bi bi-plus-lg"></i> Add Student</button>
+  </div>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Username</th><th>Class</th><th>Attendance</th><th class="text-end">Actions</th></tr></thead>
+  <tbody>{% for s in rows %}
+    <tr><td>{{ s.student_id }}</td><td>{{ s.name }}</td><td>{{ s.email }}</td><td>{{ s.username }}</td><td>{{ s.class_label }}</td>
+      <td>{{ pct_bar(s.pct, min_att, s.total) }}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#formModal" title="Edit"
+                data-action="{{ url_for('admin.student_edit', pk=s.id) }}" data-title="Edit Student"
+                data-values='{{ {"code": s.student_id, "name": s.name, "email": s.email, "username": s.username, "class_id": s.class_id}|tojson }}'><i class="bi bi-pencil"></i></button>
+        {{ delete_btn(url_for('admin.student_delete', pk=s.id), 'Delete ' ~ s.name ~ '? Their attendance and marks will also be deleted.') }}
+      </td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">No students found.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+
+<div class="modal fade" id="formModal" tabindex="-1"><div class="modal-dialog"><form method="post" class="modal-content needs-validation" novalidate>
+  {{ csrf() }}
+  <div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body row g-3">
+    <div class="col-6"><label class="form-label">Student ID</label><input name="code" class="form-control" required minlength="2" maxlength="20" pattern="[A-Za-z0-9_\-]+"></div>
+    <div class="col-6"><label class="form-label">Username</label><input name="username" class="form-control" required minlength="2" maxlength="20" pattern="[A-Za-z0-9_\-]+"></div>
+    <div class="col-12"><label class="form-label">Full name</label><input name="name" class="form-control" required minlength="2" maxlength="100"></div>
+    <div class="col-12"><label class="form-label">Email</label><input type="email" name="email" class="form-control" required maxlength="120"></div>
+    <div class="col-12"><label class="form-label">Class</label><select name="class_id" class="form-select" required>
+      <option value="">Select class</option>{% for c in classes %}<option value="{{ c.id }}">{{ c.label }}</option>{% endfor %}</select></div>
+    <div class="col-12"><label class="form-label">Password</label><input type="password" name="password" class="form-control" minlength="6" data-pw-optional required></div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+</form></div></div>
+{% endblock %}

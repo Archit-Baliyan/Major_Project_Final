@@ -1,0 +1,9 @@
+{% extends "base.html" if session.get("user_id") else "base_public.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <div class="display-1 fw-bold text-primary">{{ code }}</div>
+  <h3>{{ title }}</h3><p class="text-muted">{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for("auth.index") }}">{{ "Go to my dashboard" if session.get("user_id") else "Go to login" }}</a>
+</div>
+{% endblock %}

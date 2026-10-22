@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: smart_attendance
+      MYSQL_USER: attendance_app
+      MYSQL_PASSWORD: ${DB_PASSWORD:-local-dev-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build: .
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-local-compose-secret-change-me}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: attendance_app
+      DB_PASSWORD: ${DB_PASSWORD:-local-dev-password}
+      DB_NAME: smart_attendance
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, delete_btn %}
+{% block title %}Classes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><h3 class="page-title mb-0">Classes</h3><div class="text-muted small">Programme + semester + section</div></div>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#formModal"
+          data-action="{{ url_for('admin.class_add') }}" data-title="Create Class"><i class="bi bi-plus-lg"></i> Create Class</button>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Programme</th><th>Semester</th><th>Section</th><th>Students</th><th class="text-end">Actions</th></tr></thead>
+  <tbody>{% for c in rows %}
+    <tr><td>{{ c.class_name }}</td><td>{{ c.semester }}</td><td>{{ c.section }}</td><td>{{ c.student_count }}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#formModal" title="Edit"
+                data-action="{{ url_for('admin.class_edit', pk=c.id) }}" data-title="Edit Class"
+                data-values='{{ {"class_name": c.class_name, "semester": c.semester, "section": c.section}|tojson }}'><i class="bi bi-pencil"></i></button>
+        {{ delete_btn(url_for('admin.class_delete', pk=c.id), 'Delete this class? Its subject assignments will be removed.') }}
+      </td></tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-4">No classes yet.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+
+<div class="modal fade" id="formModal" tabindex="-1"><div class="modal-dialog"><form method="post" class="modal-content needs-validation" novalidate>
+  {{ csrf() }}
+  <div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body row g-3">
+    <div class="col-12"><label class="form-label">Programme / class name</label><input name="class_name" class="form-control" required minlength="2" maxlength="50" placeholder="e.g. MCA"></div>
+    <div class="col-6"><label class="form-label">Semester</label><input type="number" name="semester" class="form-control" required min="1" max="12"></div>
+    <div class="col-6"><label class="form-label">Section</label><input name="section" class="form-control" required maxlength="10" placeholder="A"></div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+</form></div></div>
+{% endblock %}
